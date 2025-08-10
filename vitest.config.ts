@@ -4,6 +4,7 @@ import path from 'path';
 
 export default defineConfig({
   test: {
+    watch: false,
     globals: true,
     environment: 'node',
     setupFiles: ['__tests__/setup.ts'],
@@ -19,6 +20,8 @@ export default defineConfig({
         '*.config.ts',
         'src/types/',
         'src/entities/',
+        'coverage/',
+        '.history/'
       ],
     },
   },

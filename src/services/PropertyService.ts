@@ -250,8 +250,8 @@ export class PropertyService {
       const existingRules = existingProperty.validation_rules || null;
       const newRules = data.validation_rules || null;
       
-      // Check validation rules match
-      if (JSON.stringify(existingRules) !== JSON.stringify(newRules)) {
+      // Check validation rules match using deep equality (ignores property order)
+      if (!this.deepEqual(existingRules, newRules)) {
         throw new ConflictError(
           `Property '${data.name}' of type '${data.type}' already exists with different validation rules`
         );
@@ -269,6 +269,42 @@ export class PropertyService {
       ...data,
       create_time: data.create_time || new Date()
     });
+  }
+
+  // Helper method for deep equality comparison
+  private deepEqual(obj1: any, obj2: any): boolean {
+    // Handle null/undefined cases
+    if (obj1 === null && obj2 === null) return true;
+    if (obj1 === null || obj2 === null) return false;
+    if (obj1 === undefined && obj2 === undefined) return true;
+    if (obj1 === undefined || obj2 === undefined) return false;
+    
+    // Handle primitive types
+    if (typeof obj1 !== 'object' || typeof obj2 !== 'object') {
+      return obj1 === obj2;
+    }
+    
+    // Handle arrays
+    if (Array.isArray(obj1) && Array.isArray(obj2)) {
+      if (obj1.length !== obj2.length) return false;
+      for (let i = 0; i < obj1.length; i++) {
+        if (!this.deepEqual(obj1[i], obj2[i])) return false;
+      }
+      return true;
+    }
+    
+    // Handle objects
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+    
+    if (keys1.length !== keys2.length) return false;
+    
+    for (const key of keys1) {
+      if (!keys2.includes(key)) return false;
+      if (!this.deepEqual(obj1[key], obj2[key])) return false;
+    }
+    
+    return true;
   }
 
   private validatePropertyRules(rules: any, type: string): void {
